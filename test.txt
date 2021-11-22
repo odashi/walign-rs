@@ -1,3 +1,0 @@
-aaa bbb ccc ||| 111 222 333
-bbb ccc ddd ||| 222 333 444
-ccc ddd eee ||| 333 444 555
