@@ -1,2 +1,2 @@
-# walign_rs
+# [WIP] walign
 Word alignment toolkit in Rust.
