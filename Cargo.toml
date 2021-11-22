@@ -1,0 +1,16 @@
+[package]
+name = "walign"
+version = "0.1.0"
+authors = ["odashi <yus.takara@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "walign"
+path = "src/walign/lib.rs"
+
+[[bin]]
+name = "train"
+path = "src/bin/train.rs"
+
+[dependencies]
+structopt = "0.3"
