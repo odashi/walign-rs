@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use walign::corpus::Corpus;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "walign trainer", about = "Trains word alignment model.")]
@@ -24,7 +25,7 @@ fn main() -> std::io::Result<()> {
 
     let in_file = File::open(&opt.input)?;
     let reader = BufReader::new(in_file);
-    let corpus = walign::corpus::load(reader).unwrap();
+    let corpus = Corpus::load(reader).unwrap();
 
     println!("{:?}", corpus);
 

@@ -31,42 +31,44 @@ fn stoi(word: &str, vocab: &mut HashMap<String, u32>) -> u32 {
     }
 }
 
-/// Load corpus data from fast-align format file.
-pub fn load(reader: impl BufRead) -> Result<Corpus> {
-    const SEPARATOR: &'static str = "|||";
+impl Corpus {
+    /// Load corpus data from fast-align format file.
+    pub fn load(reader: impl BufRead) -> Result<Self> {
+        const SEPARATOR: &'static str = "|||";
 
-    let mut source_vocab = HashMap::new();
-    let mut target_vocab = HashMap::new();
-    let mut source_sents = Vec::new();
-    let mut target_sents = Vec::new();
+        let mut source_vocab = HashMap::new();
+        let mut target_vocab = HashMap::new();
+        let mut source_sents = Vec::new();
+        let mut target_sents = Vec::new();
 
-    for (i, line) in reader.lines().map(|x| x.unwrap()).enumerate() {
-        let words: Vec<String> = line.split_whitespace().map(|w| w.into()).collect();
-        match words.iter().position(|w| w == SEPARATOR) {
-            Some(index) => {
-                source_sents.push(
-                    words[..index]
-                        .iter()
-                        .map(|w| stoi(w, &mut source_vocab))
-                        .collect(),
-                );
-                target_sents.push(
-                    words[index + 1..]
-                        .iter()
-                        .map(|w| stoi(w, &mut target_vocab))
-                        .collect(),
-                )
-            }
-            None => {
-                return error!("Separator \"|||\" not found in line {}.", i + 1);
+        for (i, line) in reader.lines().map(|x| x.unwrap()).enumerate() {
+            let words: Vec<String> = line.split_whitespace().map(|w| w.into()).collect();
+            match words.iter().position(|w| w == SEPARATOR) {
+                Some(index) => {
+                    source_sents.push(
+                        words[..index]
+                            .iter()
+                            .map(|w| stoi(w, &mut source_vocab))
+                            .collect(),
+                    );
+                    target_sents.push(
+                        words[index + 1..]
+                            .iter()
+                            .map(|w| stoi(w, &mut target_vocab))
+                            .collect(),
+                    )
+                }
+                None => {
+                    return error!("Separator \"|||\" not found in line {}.", i + 1);
+                }
             }
         }
-    }
 
-    Ok(Corpus {
-        source_vocab,
-        target_vocab,
-        source_sents,
-        target_sents,
-    })
+        Ok(Self {
+            source_vocab,
+            target_vocab,
+            source_sents,
+            target_sents,
+        })
+    }
 }
