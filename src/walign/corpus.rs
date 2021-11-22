@@ -1,12 +1,6 @@
+use crate::result::*;
 use std::collections::HashMap;
 use std::io::BufRead;
-
-/// Information for errors.
-#[derive(Debug)]
-pub struct Error {
-    /// Error message.
-    message: String,
-}
 
 /// Parallel corpus.
 #[derive(Debug)]
@@ -38,7 +32,7 @@ fn stoi(word: &str, vocab: &mut HashMap<String, u32>) -> u32 {
 }
 
 /// Load corpus data from fast-align format file.
-pub fn load(reader: impl BufRead) -> Result<Corpus, Error> {
+pub fn load(reader: impl BufRead) -> Result<Corpus> {
     const SEPARATOR: &'static str = "|||";
 
     let mut source_vocab = HashMap::new();
@@ -64,9 +58,7 @@ pub fn load(reader: impl BufRead) -> Result<Corpus, Error> {
                 )
             }
             None => {
-                return Err(Error {
-                    message: format!("Separator \"|||\" not found in line {}.", i + 1),
-                })
+                return error!("Separator \"|||\" not found in line {}.", i + 1);
             }
         }
     }
