@@ -11,7 +11,7 @@ pub struct Model {
     /// Shape: (|source_vocab|, |target_vocab|)
     pub t_fe: Array2<f64>,
 
-    /// Transition probability from null word to target word `e`.
+    /// Translation probability from null word to target word `e`.
     /// t_e0[e] = Pr(e|NULL)
     /// Shape: (|target_vocab|,)
     pub t_0e: Array1<f64>,
