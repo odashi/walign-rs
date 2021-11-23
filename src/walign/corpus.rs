@@ -1,4 +1,4 @@
-use crate::result::*;
+use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::io::BufRead;
 
@@ -6,20 +6,22 @@ use std::io::BufRead;
 #[derive(Debug)]
 pub struct Corpus {
     /// Source vocabulary.
-    source_vocab: HashMap<String, u32>,
+    pub source_vocab: HashMap<String, u32>,
 
     /// Target vocabulary.
-    target_vocab: HashMap<String, u32>,
+    pub target_vocab: HashMap<String, u32>,
 
     /// Source sentences.
-    source_sents: Vec<Vec<u32>>,
+    /// Every element should be in `0..source_vocab.len()`.
+    pub source_sents: Vec<Vec<u32>>,
 
     /// Target sentences.
-    target_sents: Vec<Vec<u32>>,
+    /// Every element should be in `0..target_vocab.len()`.
+    pub target_sents: Vec<Vec<u32>>,
 }
 
 /// Helper function to obtain word ID.
-/// If the vocabulary don't have an entry for a given word, This function inserts a new entry.
+/// If the vocabulary don't have an entry for a given word, this function inserts a new entry.
 fn stoi(word: &str, vocab: &mut HashMap<String, u32>) -> u32 {
     match vocab.get(word) {
         Some(&id) => id,
@@ -41,27 +43,25 @@ impl Corpus {
         let mut source_sents = Vec::new();
         let mut target_sents = Vec::new();
 
-        for (i, line) in reader.lines().map(|x| x.unwrap()).enumerate() {
+        for (i, line) in reader.lines().enumerate() {
+            let line = line.context("Some input error occurred.")?;
             let words: Vec<String> = line.split_whitespace().map(|w| w.into()).collect();
-            match words.iter().position(|w| w == SEPARATOR) {
-                Some(index) => {
-                    source_sents.push(
-                        words[..index]
-                            .iter()
-                            .map(|w| stoi(w, &mut source_vocab))
-                            .collect(),
-                    );
-                    target_sents.push(
-                        words[index + 1..]
-                            .iter()
-                            .map(|w| stoi(w, &mut target_vocab))
-                            .collect(),
-                    )
-                }
-                None => {
-                    return error!("Separator \"|||\" not found in line {}.", i + 1);
-                }
-            }
+            let sep_index = words
+                .iter()
+                .position(|w| w == SEPARATOR)
+                .context(format!("Separator \"|||\" not found in line {}", i + 1))?;
+            source_sents.push(
+                words[..sep_index]
+                    .iter()
+                    .map(|w| stoi(w, &mut source_vocab))
+                    .collect(),
+            );
+            target_sents.push(
+                words[sep_index + 1..]
+                    .iter()
+                    .map(|w| stoi(w, &mut target_vocab))
+                    .collect(),
+            )
         }
 
         Ok(Self {

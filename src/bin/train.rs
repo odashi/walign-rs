@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -17,17 +18,19 @@ struct Opt {
 
     #[structopt(short, long, parse(from_os_str), help = "Output model file.")]
     output: PathBuf,
+
+    #[structopt(long, default_value = "10", help = "Number of training epochs.")]
+    iteration: u32,
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
-    println!("{:?}", opt);
 
-    let in_file = File::open(&opt.input)?;
-    let reader = BufReader::new(in_file);
-    let corpus = Corpus::load(reader).unwrap();
-
-    println!("{:?}", corpus);
+    let reader = BufReader::new(File::open(opt.input)?);
+    let corpus = Corpus::load(reader)?;
+    let model = walign::ibm_model_1::Model::train(&corpus, opt.iteration);
+    let mut writer = File::create(opt.output)?;
+    model.save(&mut writer)?;
 
     Ok(())
 }
