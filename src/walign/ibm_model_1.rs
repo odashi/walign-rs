@@ -1,4 +1,4 @@
-use crate::corpus::Corpus;
+use crate::corpus::{ParallelCorpus, Vocabulary};
 use anyhow::Result;
 use byteorder::{LittleEndian, WriteBytesExt};
 use ndarray::prelude::*;
@@ -45,9 +45,14 @@ impl Model {
     }
 
     /// Trains IBM Model 1.
-    pub fn train(corpus: &Corpus, iteration: u32) -> Self {
-        let f_size = corpus.source_vocab.len();
-        let e_size = corpus.target_vocab.len();
+    pub fn train(
+        source_vocab: &Vocabulary,
+        target_vocab: &Vocabulary,
+        corpus: &ParallelCorpus,
+        iteration: u32,
+    ) -> Self {
+        let f_size = source_vocab.len();
+        let e_size = target_vocab.len();
 
         eprintln!("Initializing model:");
 
@@ -72,7 +77,9 @@ impl Model {
             // Negative log-likelihood of the current model.
             let mut nll = 0f64;
 
-            for (f_sent, e_sent) in corpus.source_sents.iter().zip(corpus.target_sents.iter()) {
+            for (f_sent, e_sent) in
+                corpus.source_sents.iter().zip(corpus.target_sents.iter())
+            {
                 // Sentence-wise robabilistic counts for each target word type.
                 let mut c_e = Array1::<f64>::zeros(e_size);
                 // Likelihood of this sentence in terms of current model.
@@ -92,7 +99,8 @@ impl Model {
                     likelihood += delta;
                 }
 
-                nll -= likelihood.log2() - e_size as f64 * ((f_size + 1) as f64).log2();
+                nll -= likelihood.log2()
+                    - e_size as f64 * ((f_size + 1) as f64).log2();
 
                 // Update corpus-wide probabilistic counts.
                 for e in e_sent.iter().map(|&e| e as usize) {
