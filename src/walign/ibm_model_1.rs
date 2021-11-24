@@ -1,4 +1,5 @@
-use crate::corpus::{ParallelCorpus, Vocabulary};
+use crate::corpus::ParallelCorpus;
+use crate::vocabulary::Vocabulary;
 use anyhow::Result;
 use byteorder::{LittleEndian, WriteBytesExt};
 use ndarray::prelude::*;
