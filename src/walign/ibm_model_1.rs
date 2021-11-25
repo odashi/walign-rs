@@ -135,4 +135,9 @@ impl Model {
 
         Self { t_fe, t_0e }
     }
+
+    /// Generates Viterbi alignment for a target sentence.
+    pub fn generate_viterbi_alignment(&self, source: &Sentence, target: &Sentence) -> Alignment {
+        Alignment::new(0, 0);
+    }
 }

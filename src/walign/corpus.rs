@@ -2,6 +2,24 @@ use crate::vocabulary::Vocabulary;
 use anyhow::{Context, Result};
 use std::io::BufRead;
 
+/// Word ID.
+pub type WordID = u32;
+
+/// Sentence.
+pub struct Sentence {
+    /// List of word IDs.
+    pub words: Vec<WordID>,
+}
+
+/// Snetence pair.
+pub struct SentencePair {
+    /// Source sentence.
+    pub source: Sentence,
+
+    /// Target sentence.
+    pub target: Sentence,
+}
+
 /// Parallel corpus.
 #[derive(Debug)]
 pub struct ParallelCorpus {
