@@ -1,4 +1,4 @@
-use crate::corpus::ParallelCorpus;
+use crate::corpus::SentencePair;
 use crate::vocabulary::Vocabulary;
 use anyhow::Result;
 use byteorder::{LittleEndian, WriteBytesExt};
@@ -49,7 +49,7 @@ impl Model {
     pub fn train(
         source_vocab: &Vocabulary,
         target_vocab: &Vocabulary,
-        corpus: &ParallelCorpus,
+        corpus: &[SentencePair],
         iteration: u32,
     ) -> Self {
         let f_size = source_vocab.len();
@@ -78,18 +78,19 @@ impl Model {
             // Negative log-likelihood of the current model.
             let mut nll = 0f64;
 
-            for (f_sent, e_sent) in
-                corpus.source_sents.iter().zip(corpus.target_sents.iter())
-            {
+            for pair in corpus {
+                let f_words = &pair.source.words;
+                let e_words = &pair.target.words;
+
                 // Sentence-wise robabilistic counts for each target word type.
                 let mut c_e = Array1::<f64>::zeros(e_size);
                 // Likelihood of this sentence in terms of current model.
                 let mut likelihood = 0f64;
 
                 // Counts all alignment edges.
-                for e in e_sent.iter().map(|&e| e as usize) {
+                for e in e_words.iter().map(|&e| e as usize) {
                     // Source words.
-                    for f in f_sent.iter().map(|&f| f as usize) {
+                    for f in f_words.iter().map(|&f| f as usize) {
                         let delta = t_fe[(f, e)];
                         c_e[e] += delta;
                         likelihood += delta;
@@ -104,9 +105,9 @@ impl Model {
                     - e_size as f64 * ((f_size + 1) as f64).log2();
 
                 // Update corpus-wide probabilistic counts.
-                for e in e_sent.iter().map(|&e| e as usize) {
+                for e in e_words.iter().map(|&e| e as usize) {
                     // Source words.
-                    for f in f_sent.iter().map(|&f| f as usize) {
+                    for f in f_words.iter().map(|&f| f as usize) {
                         let delta = t_fe[(f, e)] / c_e[e];
                         c_fe[(f, e)] += delta;
                         c_f[f] += delta;
@@ -134,10 +135,5 @@ impl Model {
         }
 
         Self { t_fe, t_0e }
-    }
-
-    /// Generates Viterbi alignment for a target sentence.
-    pub fn generate_viterbi_alignment(&self, source: &Sentence, target: &Sentence) -> Alignment {
-        Alignment::new(0, 0);
     }
 }
