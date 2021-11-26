@@ -1,3 +1,4 @@
+use crate::corpus::WordId;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::io::Write;
@@ -6,7 +7,7 @@ use std::io::Write;
 #[derive(Debug)]
 pub struct Vocabulary {
     /// Word to ID map.
-    stoi: HashMap<String, u32>,
+    stoi: HashMap<String, WordId>,
 }
 
 impl Vocabulary {
@@ -32,7 +33,7 @@ impl Vocabulary {
         writeln!(writer, "{}", self.len())?;
 
         let mut kv: Vec<_> = self.stoi.iter().collect();
-        kv.sort_by(|a, b| a.1.cmp(b.1));
+        kv.sort_by(|a, b| (&a.1 .0).cmp(&b.1 .0));
         for word in kv.iter().map(|x| x.0) {
             writeln!(writer, "{}", word)?;
         }
@@ -43,12 +44,12 @@ impl Vocabulary {
     /// Obtains word ID.
     /// If the vocabulary don't have an entry for a given word,
     /// this function inserts a new entry.
-    pub fn get_or_add_id(&mut self, word: &str) -> u32 {
+    pub fn get_or_add_id(&mut self, word: &str) -> WordId {
         // NOTE(odashi): not using `try_insert()` to prevent unnecessary copy of `word`.
         match self.stoi.get(word) {
             Some(&id) => id,
             None => {
-                let id = self.stoi.len() as u32;
+                let id = WordId(self.stoi.len() as u32);
                 self.stoi.insert(word.into(), id);
                 id
             }

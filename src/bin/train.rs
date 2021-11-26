@@ -53,5 +53,9 @@ fn main() -> Result<()> {
     save!(target_vocab, "target.vocab");
     save!(model, "ibm1");
 
+    for pair in corpus {
+        println!("{:?}", model.generate_viterbi_alignment(&pair));
+    }
+
     Ok(())
 }

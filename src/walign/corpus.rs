@@ -3,15 +3,18 @@ use anyhow::{Context, Result};
 use std::io::BufRead;
 
 /// Word ID.
-pub type WordID = u32;
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct WordId(pub u32);
 
 /// Sentence.
+#[derive(Debug)]
 pub struct Sentence {
     /// List of word IDs.
-    pub words: Vec<WordID>,
+    pub words: Vec<WordId>,
 }
 
 /// Snetence pair.
+#[derive(Debug)]
 pub struct SentencePair {
     /// Source sentence.
     pub source: Sentence,
@@ -45,14 +48,18 @@ pub fn load(
         let sep_index = words.iter().position(|w| w == SEPARATOR).context(
             format!("Separator \"|||\" not found in line {}", i + 1),
         )?;
-        let source = Sentence { words: words[..sep_index]
-            .iter()
-            .map(|w| source_vocab.get_or_add_id(w))
-            .collect()};
-        let target = Sentence { words: words[sep_index + 1..]
-            .iter()
-            .map(|w| target_vocab.get_or_add_id(w))
-            .collect()};
+        let source = Sentence {
+            words: words[..sep_index]
+                .iter()
+                .map(|w| source_vocab.get_or_add_id(w))
+                .collect(),
+        };
+        let target = Sentence {
+            words: words[sep_index + 1..]
+                .iter()
+                .map(|w| target_vocab.get_or_add_id(w))
+                .collect(),
+        };
         corpus.push(SentencePair { source, target });
     }
 

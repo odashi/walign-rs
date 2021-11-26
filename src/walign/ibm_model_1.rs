@@ -1,3 +1,4 @@
+use crate::alignment::{Alignment, Position};
 use crate::corpus::SentencePair;
 use crate::vocabulary::Vocabulary;
 use anyhow::Result;
@@ -88,9 +89,9 @@ impl Model {
                 let mut likelihood = 0f64;
 
                 // Counts all alignment edges.
-                for e in e_words.iter().map(|&e| e as usize) {
+                for e in e_words.iter().map(|e| e.0 as usize) {
                     // Source words.
-                    for f in f_words.iter().map(|&f| f as usize) {
+                    for f in f_words.iter().map(|f| f.0 as usize) {
                         let delta = t_fe[(f, e)];
                         c_e[e] += delta;
                         likelihood += delta;
@@ -105,9 +106,9 @@ impl Model {
                     - e_size as f64 * ((f_size + 1) as f64).log2();
 
                 // Update corpus-wide probabilistic counts.
-                for e in e_words.iter().map(|&e| e as usize) {
+                for e in e_words.iter().map(|e| e.0 as usize) {
                     // Source words.
-                    for f in f_words.iter().map(|&f| f as usize) {
+                    for f in f_words.iter().map(|f| f.0 as usize) {
                         let delta = t_fe[(f, e)] / c_e[e];
                         c_fe[(f, e)] += delta;
                         c_f[f] += delta;
@@ -135,5 +136,32 @@ impl Model {
         }
 
         Self { t_fe, t_0e }
+    }
+
+    /// Generates Viterbi alignment for given sentence pair.
+    pub fn generate_viterbi_alignment(
+        &self,
+        pair: &SentencePair,
+    ) -> Vec<Alignment> {
+        let mut alignments = vec![];
+        let f_words = &pair.source.words;
+        let e_words = &pair.target.words;
+
+        for (i, e) in e_words.iter().map(|e| e.0 as usize).enumerate() {
+            let mut best_f: Option<Position> = None;
+            let mut best_t = self.t_0e[e];
+
+            for (j, f) in f_words.iter().map(|f| f.0 as usize).enumerate() {
+                let t = self.t_fe[(f, e)];
+                if t > best_t {
+                    best_f = Some(Position(j as u32));
+                    best_t = t;
+                }
+            }
+
+            alignments.push(Alignment::new(best_f, Position(i as u32)));
+        }
+
+        alignments
     }
 }
