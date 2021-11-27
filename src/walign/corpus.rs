@@ -33,6 +33,19 @@ pub struct SentencePair {
     pub target: Sentence,
 }
 
+/// Corpus.
+#[derive(Debug)]
+pub struct Corpus {
+    /// Vocabulary in the source language associated to this corpus.
+    pub source_vocab: Vocabulary,
+
+    /// Vocabulary in the target language associated to this corpus.
+    pub target_vocab: Vocabulary,
+
+    /// List of sentence pairs.
+    pub pairs: Vec<SentencePair>,
+}
+
 /// Loads parallel corpus and vocabularies from fast-align format file.
 ///
 /// # Returns
@@ -42,14 +55,12 @@ pub struct SentencePair {
 /// - source_vocab: `Vocabulary`
 /// - target_vocab: `Vocabulary`
 /// - corpus: `Vec<SentencePair>`
-pub fn load(
-    reader: impl BufRead,
-) -> Result<(Vocabulary, Vocabulary, Vec<SentencePair>)> {
+pub fn load(reader: impl BufRead) -> Result<Corpus> {
     const SEPARATOR: &'static str = "|||";
 
     let mut source_vocab = Vocabulary::new();
     let mut target_vocab = Vocabulary::new();
-    let mut corpus = Vec::new();
+    let mut pairs = Vec::new();
 
     for (i, line) in reader.lines().enumerate() {
         let line = line.context("Some input error occurred.")?;
@@ -70,8 +81,12 @@ pub fn load(
                 .map(|w| target_vocab.get_or_add_id(w))
                 .collect(),
         };
-        corpus.push(SentencePair { source, target });
+        pairs.push(SentencePair { source, target });
     }
 
-    Ok((source_vocab, target_vocab, corpus))
+    Ok(Corpus {
+        source_vocab,
+        target_vocab,
+        pairs,
+    })
 }

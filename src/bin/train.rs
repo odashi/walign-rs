@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
 use structopt::StructOpt;
-use walign::corpus::SentencePair;
+use walign::corpus::Corpus;
 use walign::model::Model;
 
 #[derive(Debug, StructOpt)]
@@ -35,11 +35,11 @@ struct Opt {
 
 /// Generates alignments for each sentence pair and dump it to file.
 fn save_viterbi_alignments(
-    corpus: &[SentencePair],
+    corpus: &Corpus,
     model: &impl Model,
     writer: &mut impl Write,
 ) -> std::io::Result<()> {
-    for pair in corpus {
+    for pair in &corpus.pairs {
         writeln!(writer, "{}", model.make_viterbi_alignment(&pair))?;
     }
 
@@ -50,13 +50,8 @@ fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     let reader = BufReader::new(File::open(opt.input)?);
-    let (source_vocab, target_vocab, corpus) = walign::corpus::load(reader)?;
-    let model = walign::model::IbmModel1::train(
-        &source_vocab,
-        &target_vocab,
-        &corpus,
-        opt.iteration,
-    );
+    let corpus = walign::corpus::load(reader)?;
+    let model = walign::model::IbmModel1::train(&corpus, opt.iteration);
 
     macro_rules! save {
         ( $obj:expr, $ext:expr ) => {
@@ -64,8 +59,8 @@ fn main() -> Result<()> {
         };
     }
 
-    save!(source_vocab, "source.vocab");
-    save!(target_vocab, "target.vocab");
+    save!(corpus.source_vocab, "source.vocab");
+    save!(corpus.target_vocab, "target.vocab");
     save!(model, "ibm1");
     save_viterbi_alignments(
         &corpus,

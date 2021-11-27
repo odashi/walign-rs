@@ -1,6 +1,5 @@
 use crate::alignment::{Alignment, Edge, Position};
-use crate::corpus::SentencePair;
-use crate::vocabulary::Vocabulary;
+use crate::corpus::{Corpus, SentencePair};
 use byteorder::{LittleEndian, WriteBytesExt};
 use ndarray::prelude::*;
 
@@ -20,14 +19,9 @@ pub struct IbmModel1 {
 
 impl IbmModel1 {
     /// Trains IBM Model 1.
-    pub fn train(
-        source_vocab: &Vocabulary,
-        target_vocab: &Vocabulary,
-        corpus: &[SentencePair],
-        iteration: u32,
-    ) -> Self {
-        let f_size = source_vocab.len();
-        let e_size = target_vocab.len();
+    pub fn train(corpus: &Corpus, iteration: u32) -> Self {
+        let f_size = corpus.source_vocab.len();
+        let e_size = corpus.target_vocab.len();
 
         eprintln!("Initializing model:");
 
@@ -52,7 +46,7 @@ impl IbmModel1 {
             // Negative log-likelihood of the current model.
             let mut nll = 0f64;
 
-            for pair in corpus {
+            for pair in &corpus.pairs {
                 let f_words = &pair.source.words;
                 let e_words = &pair.target.words;
 
