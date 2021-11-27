@@ -2,7 +2,17 @@ use std::fmt;
 
 /// Alignment Position.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Position(pub u32);
+pub struct Position {
+    /// Value of position.
+    pub id: u32,
+}
+
+impl Position {
+    /// Creates a new Position object.
+    pub fn new(id: u32) -> Self {
+        Self { id }
+    }
+}
 
 /// Alignment edge.
 #[derive(Debug)]
@@ -23,7 +33,7 @@ impl Edge {
 
 impl fmt::Display for Edge {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}-{}", self.source.0, self.target.0)
+        write!(f, "{}-{}", self.source.id, self.target.id)
     }
 }
 

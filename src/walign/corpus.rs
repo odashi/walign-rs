@@ -4,7 +4,17 @@ use std::io::BufRead;
 
 /// Word ID.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct WordId(pub u32);
+pub struct WordId {
+    /// Value of ID.
+    pub id: u32,
+}
+
+impl WordId {
+    /// Creates a new WordId object.
+    pub fn new(id: u32) -> Self {
+        Self { id }
+    }
+}
 
 /// Sentence.
 #[derive(Debug)]

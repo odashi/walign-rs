@@ -33,7 +33,7 @@ impl Vocabulary {
         writeln!(writer, "{}", self.len())?;
 
         let mut kv: Vec<_> = self.stoi.iter().collect();
-        kv.sort_by(|a, b| (&a.1 .0).cmp(&b.1 .0));
+        kv.sort_by(|a, b| (&a.1.id).cmp(&b.1.id));
         for word in kv.iter().map(|x| x.0) {
             writeln!(writer, "{}", word)?;
         }
@@ -49,7 +49,7 @@ impl Vocabulary {
         match self.stoi.get(word) {
             Some(&id) => id,
             None => {
-                let id = WordId(self.stoi.len() as u32);
+                let id = WordId::new(self.stoi.len() as u32);
                 self.stoi.insert(word.into(), id);
                 id
             }

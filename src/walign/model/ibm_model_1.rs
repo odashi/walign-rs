@@ -62,9 +62,9 @@ impl IbmModel1 {
                 let mut likelihood = 0f64;
 
                 // Counts all alignment edges.
-                for e in e_words.iter().map(|e| e.0 as usize) {
+                for e in e_words.iter().map(|e| e.id as usize) {
                     // Source words.
-                    for f in f_words.iter().map(|f| f.0 as usize) {
+                    for f in f_words.iter().map(|f| f.id as usize) {
                         let delta = t_fe[(f, e)];
                         c_e[e] += delta;
                         likelihood += delta;
@@ -79,9 +79,9 @@ impl IbmModel1 {
                     - e_size as f64 * ((f_size + 1) as f64).log2();
 
                 // Update corpus-wide probabilistic counts.
-                for e in e_words.iter().map(|e| e.0 as usize) {
+                for e in e_words.iter().map(|e| e.id as usize) {
                     // Source words.
-                    for f in f_words.iter().map(|f| f.0 as usize) {
+                    for f in f_words.iter().map(|f| f.id as usize) {
                         let delta = t_fe[(f, e)] / c_e[e];
                         c_fe[(f, e)] += delta;
                         c_f[f] += delta;
@@ -142,11 +142,11 @@ impl crate::model::Model for IbmModel1 {
         let f_words = &pair.source.words;
         let e_words = &pair.target.words;
 
-        for (i, e) in e_words.iter().map(|e| e.0 as usize).enumerate() {
+        for (i, e) in e_words.iter().map(|e| e.id as usize).enumerate() {
             let mut best_f = 0u32;
             let mut best_t = -1f64;
 
-            for (j, f) in f_words.iter().map(|f| f.0 as usize).enumerate() {
+            for (j, f) in f_words.iter().map(|f| f.id as usize).enumerate() {
                 let t = self.t_fe[(f, e)];
                 if t > best_t {
                     best_f = j as u32;
@@ -155,7 +155,10 @@ impl crate::model::Model for IbmModel1 {
             }
 
             if best_t > self.t_0e[e] {
-                edges.push(Edge::new(Position(best_f), Position(i as u32)));
+                edges.push(Edge::new(
+                    Position::new(best_f),
+                    Position::new(i as u32),
+                ));
             }
         }
 
