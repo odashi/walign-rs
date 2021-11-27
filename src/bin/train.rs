@@ -1,8 +1,9 @@
 use anyhow::Result;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Write};
 use std::path::PathBuf;
 use structopt::StructOpt;
+use walign::corpus::SentencePair;
 use walign::model::Model;
 
 #[derive(Debug, StructOpt)]
@@ -32,6 +33,19 @@ struct Opt {
     iteration: u32,
 }
 
+/// Generates alignments for each sentence pair and dump it to file.
+fn save_viterbi_alignments(
+    corpus: &[SentencePair],
+    model: &impl Model,
+    writer: &mut impl Write,
+) -> std::io::Result<()> {
+    for pair in corpus {
+        writeln!(writer, "{}", model.make_viterbi_alignment(&pair))?;
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let opt = Opt::from_args();
 
@@ -53,10 +67,11 @@ fn main() -> Result<()> {
     save!(source_vocab, "source.vocab");
     save!(target_vocab, "target.vocab");
     save!(model, "ibm1");
-
-    for pair in corpus {
-        println!("{}", model.make_viterbi_alignment(&pair));
-    }
+    save_viterbi_alignments(
+        &corpus,
+        &model,
+        &mut File::create(opt.output.with_extension("viterbi"))?,
+    )?;
 
     Ok(())
 }
