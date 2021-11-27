@@ -54,15 +54,7 @@ fn main() -> Result<()> {
     save!(model, "ibm1");
 
     for pair in corpus {
-        println!(
-            "{}",
-            model
-                .generate_viterbi_alignment(&pair)
-                .iter()
-                .map(|a| a.to_string())
-                .collect::<Vec<_>>()
-                .join(" ")
-        );
+        println!("{}", model.make_viterbi_alignment(&pair));
     }
 
     Ok(())

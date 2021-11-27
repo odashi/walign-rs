@@ -26,3 +26,29 @@ impl fmt::Display for Alignment {
         write!(f, "{}-{}", self.source.0, self.target.0)
     }
 }
+
+/// Alignment list.
+pub struct AlignmentList {
+    /// Alignments.
+    pub alignments: Vec<Alignment>,
+}
+
+impl AlignmentList {
+    /// Creates a new AlignmentList.
+    pub fn new(alignments: Vec<Alignment>) -> Self {
+        Self { alignments }
+    }
+}
+
+impl fmt::Display for AlignmentList {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.alignments.len() > 0 {
+            self.alignments[0].fmt(f)?;
+            for a in self.alignments.iter().skip(1) {
+                write!(f, " ")?;
+                a.fmt(f)?;
+            }
+        }
+        Ok(())
+    }
+}
