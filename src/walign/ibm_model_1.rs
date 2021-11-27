@@ -148,18 +148,21 @@ impl Model {
         let e_words = &pair.target.words;
 
         for (i, e) in e_words.iter().map(|e| e.0 as usize).enumerate() {
-            let mut best_f: Option<Position> = None;
-            let mut best_t = self.t_0e[e];
+            let mut best_f = 0u32;
+            let mut best_t = -1f64;
 
             for (j, f) in f_words.iter().map(|f| f.0 as usize).enumerate() {
                 let t = self.t_fe[(f, e)];
                 if t > best_t {
-                    best_f = Some(Position(j as u32));
+                    best_f = j as u32;
                     best_t = t;
                 }
             }
 
-            alignments.push(Alignment::new(best_f, Position(i as u32)));
+            if best_t > self.t_0e[e] {
+                alignments
+                    .push(Alignment::new(Position(best_f), Position(i as u32)));
+            }
         }
 
         alignments
