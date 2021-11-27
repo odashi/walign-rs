@@ -1,4 +1,4 @@
-use crate::alignment::{Alignment, AlignmentList, Position};
+use crate::alignment::{Alignment, Edge, Position};
 use crate::corpus::SentencePair;
 use crate::vocabulary::Vocabulary;
 use anyhow::Result;
@@ -139,8 +139,8 @@ impl Model {
     }
 
     /// Generates Viterbi alignment for given sentence pair.
-    pub fn make_viterbi_alignment(&self, pair: &SentencePair) -> AlignmentList {
-        let mut alignments = vec![];
+    pub fn make_viterbi_alignment(&self, pair: &SentencePair) -> Alignment {
+        let mut edges = vec![];
         let f_words = &pair.source.words;
         let e_words = &pair.target.words;
 
@@ -157,11 +157,10 @@ impl Model {
             }
 
             if best_t > self.t_0e[e] {
-                alignments
-                    .push(Alignment::new(Position(best_f), Position(i as u32)));
+                edges.push(Edge::new(Position(best_f), Position(i as u32)));
             }
         }
 
-        AlignmentList::new(alignments)
+        Alignment::new(edges)
     }
 }
