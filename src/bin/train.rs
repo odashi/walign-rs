@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use walign::model::Model;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "walign trainer", about = "Trains word alignment model.")]
@@ -36,7 +37,7 @@ fn main() -> Result<()> {
 
     let reader = BufReader::new(File::open(opt.input)?);
     let (source_vocab, target_vocab, corpus) = walign::corpus::load(reader)?;
-    let model = walign::ibm_model_1::Model::train(
+    let model = walign::model::IbmModel1::train(
         &source_vocab,
         &target_vocab,
         &corpus,

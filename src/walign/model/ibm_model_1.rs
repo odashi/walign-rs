@@ -1,13 +1,12 @@
 use crate::alignment::{Alignment, Edge, Position};
 use crate::corpus::SentencePair;
 use crate::vocabulary::Vocabulary;
-use anyhow::Result;
 use byteorder::{LittleEndian, WriteBytesExt};
 use ndarray::prelude::*;
-use std::io::Write;
 
+/// IBM Model 1.
 #[derive(Debug)]
-pub struct Model {
+pub struct IbmModel1 {
     /// Translation probability from source word `f` to target word `e`.
     /// t_fe[(f, e)] = Pr(e|f)
     /// Shape: (|source_vocab|, |target_vocab|)
@@ -19,33 +18,7 @@ pub struct Model {
     pub t_0e: Array1<f64>,
 }
 
-impl Model {
-    /// Saves a model to binary file.
-    ///
-    /// # File format
-    ///
-    /// - `f_size`: `u32`
-    /// - `e_size`: `u32`
-    /// - `t_fe`: `[f64; f_size * e_size]`
-    /// - `t_0e`: `[f64; e_size]`
-    ///
-    /// All values are of little endian.
-    /// `t_fe` and `t_0e` are stored in row-major ascending order.
-    ///
-    /// - `t_fe`: `[(0, 0)], [(0, 1)]..., [(0, el-1)], [(1, 0)], ...`
-    /// - `t_0e`: `[0], [1], ...`
-    pub fn save(&self, writer: &mut impl Write) -> Result<()> {
-        writer.write_u32::<LittleEndian>(self.t_fe.nrows() as u32)?;
-        writer.write_u32::<LittleEndian>(self.t_fe.ncols() as u32)?;
-        for &val in self.t_fe.iter() {
-            writer.write_f64::<LittleEndian>(val)?;
-        }
-        for &val in self.t_0e.iter() {
-            writer.write_f64::<LittleEndian>(val)?;
-        }
-        Ok(())
-    }
-
+impl IbmModel1 {
     /// Trains IBM Model 1.
     pub fn train(
         source_vocab: &Vocabulary,
@@ -137,9 +110,34 @@ impl Model {
 
         Self { t_fe, t_0e }
     }
+}
 
-    /// Generates Viterbi alignment for given sentence pair.
-    pub fn make_viterbi_alignment(&self, pair: &SentencePair) -> Alignment {
+impl crate::model::Model for IbmModel1 {
+    /// # File format
+    ///
+    /// - `f_size`: `u32`
+    /// - `e_size`: `u32`
+    /// - `t_fe`: `[f64; f_size * e_size]`
+    /// - `t_0e`: `[f64; e_size]`
+    ///
+    /// All values are of little endian.
+    /// `t_fe` and `t_0e` are stored in row-major ascending order.
+    ///
+    /// - `t_fe`: `[(0, 0)], [(0, 1)]..., [(0, el-1)], [(1, 0)], ...`
+    /// - `t_0e`: `[0], [1], ...`
+    fn save(&self, writer: &mut impl std::io::Write) -> std::io::Result<()> {
+        writer.write_u32::<LittleEndian>(self.t_fe.nrows() as u32)?;
+        writer.write_u32::<LittleEndian>(self.t_fe.ncols() as u32)?;
+        for &val in self.t_fe.iter() {
+            writer.write_f64::<LittleEndian>(val)?;
+        }
+        for &val in self.t_0e.iter() {
+            writer.write_f64::<LittleEndian>(val)?;
+        }
+        Ok(())
+    }
+
+    fn make_viterbi_alignment(&self, pair: &SentencePair) -> Alignment {
         let mut edges = vec![];
         let f_words = &pair.source.words;
         let e_words = &pair.target.words;
