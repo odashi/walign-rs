@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 name = "walign"
 readme = "README.md"
 repository = "https://github.com/odashi/walign-rs/"
-version = "0.1.4"
+version = "0.1.5"
 
 [lib]
 name = "walign"
