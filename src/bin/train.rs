@@ -1,10 +1,7 @@
-use anyhow::Result;
-use std::fs::File;
-use std::io::BufReader;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use walign::alignment::AlignmentGenerator;
-use walign::io::Save;
+use walign::io::{Load, Save};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "walign trainer", about = "Trains word alignment model.")]
@@ -33,11 +30,10 @@ struct Opt {
     iteration: u32,
 }
 
-fn main() -> Result<()> {
+fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
 
-    let reader = BufReader::new(File::open(opt.input)?);
-    let corpus = walign::corpus::load(reader)?;
+    let corpus = walign::corpus::Corpus::load_from_path(opt.input)?;
     let model = walign::model::IbmModel1::train(&corpus, opt.iteration);
 
     macro_rules! save {

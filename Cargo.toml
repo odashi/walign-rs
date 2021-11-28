@@ -18,7 +18,6 @@ name = "train"
 path = "src/bin/train.rs"
 
 [dependencies]
-anyhow = "1.0"
 byteorder = "1.4"
 structopt = "0.3"
 ndarray = "0.15"

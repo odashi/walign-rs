@@ -1,6 +1,5 @@
 use crate::vocabulary::Vocabulary;
-use anyhow::{Context, Result};
-use std::io::BufRead;
+use std::io::{BufRead, Error, ErrorKind, Result};
 
 /// Word ID.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -46,47 +45,50 @@ pub struct Corpus {
     pub pairs: Vec<SentencePair>,
 }
 
-/// Loads parallel corpus and vocabularies from fast-align format file.
-///
-/// # Returns
-///
-/// Tuple of following values:
-///
-/// - source_vocab: `Vocabulary`
-/// - target_vocab: `Vocabulary`
-/// - corpus: `Vec<SentencePair>`
-pub fn load(reader: impl BufRead) -> Result<Corpus> {
-    const SEPARATOR: &'static str = "|||";
+impl crate::io::Load for Corpus {
+    /// Loads parallel corpus and vocabularies from fast-align format file.
+    ///
+    /// # Returns
+    ///
+    /// Tuple of following values:
+    ///
+    /// - source_vocab: `Vocabulary`
+    /// - target_vocab: `Vocabulary`
+    /// - corpus: `Vec<SentencePair>`
+    fn load(reader: &mut impl BufRead) -> Result<Self> {
+        const SEPARATOR: &'static str = "|||";
 
-    let mut source_vocab = Vocabulary::new();
-    let mut target_vocab = Vocabulary::new();
-    let mut pairs = Vec::new();
+        let mut source_vocab = Vocabulary::new();
+        let mut target_vocab = Vocabulary::new();
+        let mut pairs = Vec::new();
 
-    for (i, line) in reader.lines().enumerate() {
-        let line = line.context("Some input error occurred.")?;
-        let words: Vec<String> =
-            line.split_whitespace().map(|w| w.into()).collect();
-        let sep_index = words.iter().position(|w| w == SEPARATOR).context(
-            format!("Separator \"|||\" not found in line {}", i + 1),
-        )?;
-        let source = Sentence {
-            words: words[..sep_index]
-                .iter()
-                .map(|w| source_vocab.get_or_add_id(w))
-                .collect(),
-        };
-        let target = Sentence {
-            words: words[sep_index + 1..]
-                .iter()
-                .map(|w| target_vocab.get_or_add_id(w))
-                .collect(),
-        };
-        pairs.push(SentencePair { source, target });
+        for (i, line) in reader.lines().enumerate() {
+            let words: Vec<String> =
+                line?.split_whitespace().map(|w| w.into()).collect();
+            let sep_index =
+                words.iter().position(|w| w == SEPARATOR).ok_or(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("Separator \"|||\" not found in line {}", i + 1),
+                ))?;
+            let source = Sentence {
+                words: words[..sep_index]
+                    .iter()
+                    .map(|w| source_vocab.get_or_add_id(w))
+                    .collect(),
+            };
+            let target = Sentence {
+                words: words[sep_index + 1..]
+                    .iter()
+                    .map(|w| target_vocab.get_or_add_id(w))
+                    .collect(),
+            };
+            pairs.push(SentencePair { source, target });
+        }
+
+        Ok(Self {
+            source_vocab,
+            target_vocab,
+            pairs,
+        })
     }
-
-    Ok(Corpus {
-        source_vocab,
-        target_vocab,
-        pairs,
-    })
 }
