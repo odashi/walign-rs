@@ -20,6 +20,7 @@ pub struct IbmModel1 {
 impl IbmModel1 {
     /// Trains IBM Model 1.
     pub fn train(corpus: &Corpus, iteration: u32) -> Self {
+        const EPS: f64 = 1e-30;
         let f_size = corpus.source_vocab.len();
         let e_size = corpus.target_vocab.len();
 
@@ -27,8 +28,8 @@ impl IbmModel1 {
 
         // Initializes probabilities with uniform PDF.
         let t_init = 1. / (e_size as f64 + 1.);
-        let mut t_fe = Array2::<f64>::ones((f_size, e_size)) * t_init;
-        let mut t_0e = Array1::<f64>::ones(e_size) * t_init;
+        let mut t_fe = Array2::<f64>::zeros((f_size, e_size)) + t_init;
+        let mut t_0e = Array1::<f64>::zeros(e_size) + t_init;
 
         for epoch in 0..iteration {
             eprintln!("Epoch {}:", epoch + 1);
@@ -40,8 +41,8 @@ impl IbmModel1 {
             // c_0          = count(f=NULL)    = sum_e count(f=NULL, e)
             let mut c_fe = Array2::<f64>::zeros((f_size, e_size));
             let mut c_0e = Array1::<f64>::zeros(e_size);
-            let mut c_f = Array1::<f64>::zeros(f_size);
-            let mut c_0 = 0f64;
+            let mut c_f = Array1::<f64>::zeros(f_size) + EPS;
+            let mut c_0 = EPS;
 
             // Negative log-likelihood of the current model.
             let mut nll = 0f64;
@@ -51,7 +52,7 @@ impl IbmModel1 {
                 let e_words = &pair.target.words;
 
                 // Sentence-wise robabilistic counts for each target word type.
-                let mut c_e = Array1::<f64>::zeros(e_size);
+                let mut c_e = Array1::<f64>::zeros(e_size) + EPS;
                 // Likelihood of this sentence in terms of current model.
                 let mut likelihood = 0f64;
 
@@ -92,13 +93,9 @@ impl IbmModel1 {
             // Update model.
             for e in 0..e_size {
                 for f in 0..f_size {
-                    t_fe[(f, e)] = if c_f[f] > 0f64 {
-                        c_fe[(f, e)] / c_f[f]
-                    } else {
-                        0f64
-                    };
+                    t_fe[(f, e)] = c_fe[(f, e)] / c_f[f];
                 }
-                t_0e[e] = if c_0 > 0f64 { c_0e[e] / c_0 } else { 0f64 }
+                t_0e[e] = c_0e[e] / c_0;
             }
         }
 
