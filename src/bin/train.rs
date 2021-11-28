@@ -61,7 +61,7 @@ fn main() -> Result<()> {
 
     macro_rules! save {
         ( $obj:expr, $ext:expr ) => {
-            $obj.save(&mut open_writer(opt.output.with_extension($ext))?)?
+            $obj.save_to_path(opt.output.with_extension($ext))?
         };
     }
 
