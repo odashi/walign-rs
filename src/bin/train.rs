@@ -4,6 +4,7 @@ use std::io::{BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use walign::corpus::Corpus;
+use walign::io::Save;
 use walign::model::Model;
 
 #[derive(Debug, StructOpt)]

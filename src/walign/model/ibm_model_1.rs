@@ -103,7 +103,7 @@ impl IbmModel1 {
     }
 }
 
-impl crate::model::Model for IbmModel1 {
+impl crate::io::Save for IbmModel1 {
     /// # File format
     ///
     /// - `f_size`: `u32`
@@ -127,7 +127,9 @@ impl crate::model::Model for IbmModel1 {
         }
         Ok(())
     }
+}
 
+impl crate::model::Model for IbmModel1 {
     fn make_viterbi_alignment(&self, pair: &SentencePair) -> Alignment {
         let mut edges = vec![];
         let f_words = &pair.source.words;
