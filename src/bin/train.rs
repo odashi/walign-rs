@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::fs::File;
-use std::io::{BufReader, Write};
-use std::path::PathBuf;
+use std::io::{BufReader, BufWriter, Write};
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use walign::corpus::Corpus;
 use walign::model::Model;
@@ -33,6 +33,11 @@ struct Opt {
     iteration: u32,
 }
 
+/// Opens BufWriter for writing a file.
+fn open_writer(path: impl AsRef<Path>) -> Result<BufWriter<File>> {
+    Ok(BufWriter::new(File::create(path)?))
+}
+
 /// Generates alignments for each sentence pair and dump it to file.
 fn save_viterbi_alignments(
     corpus: &Corpus,
@@ -55,7 +60,7 @@ fn main() -> Result<()> {
 
     macro_rules! save {
         ( $obj:expr, $ext:expr ) => {
-            $obj.save(&mut File::create(opt.output.with_extension($ext))?)?
+            $obj.save(&mut open_writer(opt.output.with_extension($ext))?)?
         };
     }
 
@@ -65,7 +70,7 @@ fn main() -> Result<()> {
     save_viterbi_alignments(
         &corpus,
         &model,
-        &mut File::create(opt.output.with_extension("viterbi"))?,
+        &mut open_writer(opt.output.with_extension("viterbi"))?,
     )?;
 
     Ok(())
